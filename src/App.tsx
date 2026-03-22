@@ -275,7 +275,7 @@ function App() {
                   onDragOver={(e) => handleDragOver(e, s.session_id)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  onDoubleClick={() => handleDoubleClick(s.pid, s.cwd)}
+                  onClick={() => handleDoubleClick(s.pid, s.cwd)}
                 >
                   <div className="compact-row">
                     {isEditing && (
@@ -317,7 +317,7 @@ function App() {
                 onDragOver={(e) => handleDragOver(e, s.session_id)}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
-                onDoubleClick={() => handleDoubleClick(s.pid, s.cwd)}
+                onClick={() => handleDoubleClick(s.pid, s.cwd)}
               >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
