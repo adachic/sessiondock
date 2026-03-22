@@ -361,6 +361,10 @@
         <div><h3 data-i18n="feat4_h"></h3><p data-i18n="feat4_p"></p></div>
       </div>
       <div class="feature">
+        <div class="feature-icon">&#128433;</div>
+        <div><h3 data-i18n="feat6_h"></h3><p data-i18n="feat6_p"></p></div>
+      </div>
+      <div class="feature">
         <div class="feature-icon">&#127760;</div>
         <div><h3 data-i18n="feat5_h"></h3><p data-i18n="feat5_p"></p></div>
       </div>
@@ -443,12 +447,14 @@ const T = {
     feat_title: "SessionDock solves all of this",
     feat1_h: "All sessions at a glance",
     feat1_p: "Running, waiting, done \u2014 see every session's status in real time. Sort by status, cost, or time. Background processes shown with a badge.",
-    feat2_h: "Sound alert 3s after idle",
-    feat2_p: "When a session finishes and waits for input, you get a macOS notification + sound. Never miss it again.",
+    feat2_h: "Sound alert 10s after idle",
+    feat2_p: "When a session waits for input for 10 seconds, you get a notification sound. Never miss it again.",
     feat3_h: "API cost & context remaining",
     feat3_p: "Token usage, estimated API cost, and context window remaining % shown for every session.",
     feat4_h: "Fully local. Zero data sent",
     feat4_p: "Reads ~/.claude/ files only. No network calls. No API keys needed. Complete privacy.",
+    feat6_h: "Click to jump to terminal",
+    feat6_p: "Click a session to activate its terminal window. Finds the exact VS Code window, Terminal.app tab, or iTerm2 session.",
     feat5_h: "Multi-language support",
     feat5_p: "UI available in English, Japanese, Chinese, and Korean. Auto-detects your system language.",
     spec_title: "Specs",
@@ -485,12 +491,14 @@ const T = {
     feat_title: "SessionDock がすべて解決",
     feat1_h: "全セッション一覧表示",
     feat1_p: "実行中・入力待ち・完了がリアルタイムで一目で分かる。状態順・費用順・時間順でソート可能。バックグラウンドプロセス（devサーバー等）も検出表示。",
-    feat2_h: "入力待ちになったら3秒後に通知音",
-    feat2_p: "処理が完了してユーザー入力待ちになると、macOS通知 + 音でお知らせ。もう見逃さない。",
+    feat2_h: "入力待ち10秒後に通知音",
+    feat2_p: "処理が完了して10秒間入力待ちが続くと通知音でお知らせ。もう見逃さない。",
     feat3_h: "API費用 & コンテキスト残量",
     feat3_p: "各セッションのトークン消費量・推定API費用・コンテキストウィンドウの残り%を常時表示。",
     feat4_h: "完全ローカル。データ送信なし",
     feat4_p: "~/.claude/ のファイルを読むだけ。外部通信ゼロ。APIキーも不要。プライバシー完全保護。",
+    feat6_h: "クリックでターミナルにジャンプ",
+    feat6_p: "セッションをクリックすると、そのターミナルウィンドウがアクティブに。VS Codeは複数ウィンドウからプロジェクトを特定。Terminal.app/iTerm2はタブまで特定。",
     feat5_h: "多言語対応",
     feat5_p: "英語・日本語・中国語・韓国語に対応。システム言語を自動検出。アプリ内で即切り替え可能。",
     spec_title: "スペック",
@@ -527,12 +535,14 @@ const T = {
     feat_title: "SessionDock 一次解决所有问题",
     feat1_h: "所有会话一目了然",
     feat1_p: "运行中、等待输入、已完成 \u2014 实时显示。按状态、费用、时间排序。后台进程（开发服务器等）显示标记。",
-    feat2_h: "空闲3秒后声音提醒",
-    feat2_p: "当会话完成处理等待输入时，macOS 通知 + 声音提醒。再也不会错过。",
+    feat2_h: "空闲10秒后声音提醒",
+    feat2_p: "会话等待输入10秒后，通过声音提醒。再也不会错过。",
     feat3_h: "API 费用 & 上下文剩余",
     feat3_p: "每个会话的 token 消耗、预估 API 费用、上下文窗口剩余百分比，实时显示。",
     feat4_h: "完全本地运行，零数据上传",
     feat4_p: "仅读取 ~/.claude/ 文件。无网络请求。无需 API 密钥。隐私完全保护。",
+    feat6_h: "点击跳转到终端",
+    feat6_p: "点击会话即可激活其终端窗口。可精确定位 VS Code 窗口、Terminal.app 标签页或 iTerm2 会话。",
     feat5_h: "多语言支持",
     feat5_p: "支持英语、日语、中文、韩语。自动检测系统语言，可在应用内随时切换。",
     spec_title: "规格",
@@ -569,12 +579,14 @@ const T = {
     feat_title: "SessionDock이 전부 해결",
     feat1_h: "전체 세션 한눈에 표시",
     feat1_p: "실행 중·입력 대기·완료를 실시간 확인. 상태·비용·시간순 정렬. 백그라운드 프로세스(개발 서버 등) 감지 표시.",
-    feat2_h: "대기 상태 전환 3초 후 알림음",
-    feat2_p: "처리 완료 후 사용자 입력 대기로 전환되면 macOS 알림 + 소리로 알려줌. 더 이상 놓치지 않는다.",
+    feat2_h: "입력 대기 10초 후 알림음",
+    feat2_p: "세션이 10초간 입력 대기 상태를 유지하면 알림음으로 알려줌. 더 이상 놓치지 않는다.",
     feat3_h: "API 비용 & 컨텍스트 잔량",
     feat3_p: "각 세션의 토큰 소비량·추정 API 비용·컨텍스트 윈도우 잔여 %를 상시 표시.",
     feat4_h: "완전 로컬. 데이터 전송 없음",
     feat4_p: "~/.claude/ 파일만 읽음. 네트워크 통신 제로. API 키 불필요. 프라이버시 완전 보호.",
+    feat6_h: "클릭으로 터미널 이동",
+    feat6_p: "세션을 클릭하면 해당 터미널 창이 활성화. VS Code 창, Terminal.app 탭, iTerm2 세션을 정확히 찾아줍니다.",
     feat5_h: "다국어 지원",
     feat5_p: "영어, 일본어, 중국어, 한국어 지원. 시스템 언어 자동 감지. 앱 내에서 즉시 전환 가능.",
     spec_title: "스펙",
