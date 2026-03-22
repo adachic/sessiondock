@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { Lang, LANGS, Messages, getMessages, detectLang } from "./i18n";
 
 interface Session {
   session_id: string;
@@ -72,12 +73,12 @@ function statusIcon(status: string): string {
   }
 }
 
-function statusText(status: string): string {
+function statusText(status: string, t: Messages): string {
   switch (status) {
-    case "Running": return "実行中";
-    case "Waiting": return "入力待ち";
-    case "Done": return "完了";
-    case "Error": return "エラー";
+    case "Running": return t.running;
+    case "Waiting": return t.waiting;
+    case "Done": return t.done;
+    case "Error": return t.error;
     default: return status;
   }
 }
@@ -85,6 +86,13 @@ function statusText(status: string): string {
 function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [compact, setCompact] = useState(true);
+  const [lang, setLang] = useState<Lang>(detectLang);
+  const t = getMessages(lang);
+
+  function changeLang(l: Lang) {
+    setLang(l);
+    localStorage.setItem("sessiondock-lang", l);
+  }
 
   useEffect(() => {
     invoke<Session[]>("get_sessions").then(setSessions);
@@ -101,11 +109,23 @@ function App() {
 
   return (
     <div className="app">
+      <div className="lang-bar">
+        {LANGS.map((l) => (
+          <button
+            key={l.code}
+            className={`lang-btn ${lang === l.code ? "active" : ""}`}
+            onClick={() => changeLang(l.code)}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+
       <div className="header">
         <h1>SessionDock</h1>
         <div className="header-right">
           <button className="view-toggle" onClick={() => setCompact(!compact)}>
-            {compact ? "詳細" : "簡易"}
+            {compact ? t.detail : t.compact}
           </button>
           <div className="status-badges">
             {active > 0 && <span className="badge active">▶{active}</span>}
@@ -117,8 +137,8 @@ function App() {
 
       {sessions.length === 0 ? (
         <div className="empty-state">
-          <h2>No sessions</h2>
-          <p>Claude Codeを起動してください</p>
+          <h2>{t.noSessions}</h2>
+          <p>{t.startClaude}</p>
         </div>
       ) : (
         <div className="sessions">
@@ -135,7 +155,7 @@ function App() {
                       {statusIcon(s.status)}
                     </span>
                     <span className="compact-project">{s.project_name}</span>
-                    <span className="compact-since">{statusText(s.status)} {formatElapsed(s.status_since_seconds)}</span>
+                    <span className="compact-since">{statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}</span>
                     <span className="compact-ctx">{remainPct}%</span>
                     <span className="compact-cost">${s.estimated_cost.toFixed(2)}</span>
                   </div>
@@ -156,10 +176,10 @@ function App() {
               <div key={s.session_id} className={`session-card ${s.status.toLowerCase()}`}>
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
-                    {statusIcon(s.status)} {statusText(s.status)} {formatElapsed(s.status_since_seconds)}
+                    {statusIcon(s.status)} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
                   </span>
                   <span className="session-time">
-                    Total {formatElapsed(s.elapsed_seconds)}
+                    {t.total} {formatElapsed(s.elapsed_seconds)}
                   </span>
                 </div>
 
@@ -173,11 +193,11 @@ function App() {
 
                 <div className="session-meta">
                   <span>{shortModel(s.model)}</span>
-                  <span>累計 ↓{formatTokens(s.tokens_in)} ↑{formatTokens(s.tokens_out)}</span>
-                  <span>API費用 ${s.estimated_cost.toFixed(2)}</span>
+                  <span>{t.cumulative} ↓{formatTokens(s.tokens_in)} ↑{formatTokens(s.tokens_out)}</span>
+                  <span>{t.apiCost} ${s.estimated_cost.toFixed(2)}</span>
                 </div>
                 <div className="session-context-detail">
-                  コンテキスト: {formatTokens(s.last_context_used)} / {formatTokens(ctxLimit)} ({usedPct}%使用 / 残り{remainPct}%)
+                  {t.context}: {formatTokens(s.last_context_used)} / {formatTokens(ctxLimit)} ({usedPct}% {t.used} / {t.remaining} {remainPct}%)
                 </div>
                 <div className="context-bar">
                   <div
@@ -193,8 +213,8 @@ function App() {
 
       {sessions.length > 0 && (
         <div className="footer">
-          <span>{sessions.length} sessions</span>
-          <span>API費用合計 ${totalCost.toFixed(2)}</span>
+          <span>{sessions.length} {t.sessions}</span>
+          <span>{t.apiCostTotal} ${totalCost.toFixed(2)}</span>
         </div>
       )}
     </div>
