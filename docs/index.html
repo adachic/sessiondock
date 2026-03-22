@@ -8,6 +8,14 @@
   <meta property="og:title" content="SessionDock - Claude Code Multi-Session Monitor">
   <meta property="og:description" content="All Claude Code sessions in one view. Sound notification when done.">
   <meta property="og:type" content="website">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FVJF60FXQP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FVJF60FXQP');
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -127,6 +135,43 @@
     }
     .footer a { color: var(--blue); text-decoration: none; }
 
+    /* Feedback section */
+    .feedback-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px; max-width: 480px; margin: 0 auto;
+    }
+    .feedback-rating { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+    .feedback-btn {
+      background: none; border: 1px solid var(--border); color: var(--text);
+      font-size: 28px; width: 56px; height: 56px; border-radius: 12px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .feedback-btn:hover { border-color: var(--green); background: rgba(74,222,128,0.08); }
+    .feedback-btn.selected { border-color: var(--green); background: rgba(74,222,128,0.15); }
+    .feedback-text {
+      width: 100%; background: #1a1a2e; border: 1px solid var(--border);
+      color: var(--text); font-size: 14px; padding: 12px; border-radius: 8px;
+      resize: vertical; min-height: 80px; font-family: inherit;
+      margin-top: 12px; display: none;
+    }
+    .feedback-text:focus { outline: none; border-color: var(--green); }
+    .feedback-submit {
+      display: none; margin-top: 12px; background: var(--green); color: #0f0f1a;
+      border: none; font-size: 14px; font-weight: 600;
+      padding: 10px 24px; border-radius: 8px; cursor: pointer;
+    }
+    .feedback-submit:hover { opacity: 0.9; }
+    .feedback-thanks {
+      display: none; text-align: center; color: var(--green);
+      font-weight: 600; margin-top: 16px;
+    }
+    .feedback-links {
+      display: flex; justify-content: center; gap: 16px; margin-top: 16px;
+      font-size: 13px;
+    }
+    .feedback-links a { color: var(--blue); text-decoration: none; }
+    .feedback-links a:hover { text-decoration: underline; }
+
     @media (max-width: 600px) {
       .hero h1 { font-size: 26px; }
       .pain-grid { grid-template-columns: 1fr; }
@@ -150,10 +195,10 @@
     <h1 data-i18n="hero_title"></h1>
     <p data-i18n="hero_sub"></p>
     <div class="hero-cta">
-      <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary">Download .dmg (Apple Silicon)</a>
-      <a href="https://github.com/adachic/sessiondock" class="btn-secondary">GitHub</a>
+      <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary" onclick="trackDownload('dmg','hero')">Download .dmg (Apple Silicon)</a>
+      <a href="https://github.com/adachic/sessiondock" class="btn-secondary" onclick="trackEvent('click_github','hero')">GitHub</a>
     </div>
-    <div class="install-cmd">brew install --cask adachic/tap/sessiondock</div>
+    <div class="install-cmd" onclick="copyBrew(this)" style="cursor:pointer" title="Click to copy">brew install --cask adachic/tap/sessiondock</div>
   </div>
 </section>
 
@@ -269,9 +314,31 @@
   <div class="container">
     <h2 data-i18n="cta_title"></h2>
     <p data-i18n="cta_sub"></p>
-    <div class="install-cmd" style="margin-bottom:20px">brew install --cask adachic/tap/sessiondock</div>
+    <div class="install-cmd" style="margin-bottom:20px;cursor:pointer" onclick="copyBrew(this)" title="Click to copy">brew install --cask adachic/tap/sessiondock</div>
     <br>
-    <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary" data-i18n="cta_btn"></a>
+    <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary" data-i18n="cta_btn" onclick="trackDownload('dmg','cta')"></a>
+  </div>
+</section>
+
+<section class="section" id="feedback">
+  <div class="container">
+    <div class="feedback-box">
+      <h2 style="font-size:22px;text-align:center;margin-bottom:4px" data-i18n="fb_title"></h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px" data-i18n="fb_sub"></p>
+      <div class="feedback-rating">
+        <button class="feedback-btn" onclick="selectRating('love')" data-rating="love">&#10084;&#65039;</button>
+        <button class="feedback-btn" onclick="selectRating('good')" data-rating="good">&#128077;</button>
+        <button class="feedback-btn" onclick="selectRating('ok')" data-rating="ok">&#128528;</button>
+        <button class="feedback-btn" onclick="selectRating('bad')" data-rating="bad">&#128078;</button>
+      </div>
+      <textarea class="feedback-text" id="feedbackText" placeholder="" data-i18n-placeholder="fb_placeholder"></textarea>
+      <button class="feedback-submit" id="feedbackSubmit" onclick="submitFeedback()" data-i18n="fb_send"></button>
+      <div class="feedback-thanks" id="feedbackThanks" data-i18n="fb_thanks"></div>
+      <div class="feedback-links">
+        <a href="https://github.com/adachic/sessiondock/issues/new?template=feature_request.md" target="_blank" data-i18n="fb_feature"></a>
+        <a href="https://github.com/adachic/sessiondock/issues/new?template=bug_report.md" target="_blank" data-i18n="fb_bug"></a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -316,6 +383,13 @@ const T = {
     cta_title: "Get started now",
     cta_sub: "Download via Homebrew or GitHub Releases. Setup in 30 seconds.",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
+    fb_title: "How's SessionDock?",
+    fb_sub: "Your feedback helps us improve",
+    fb_placeholder: "Tell us more (optional)...",
+    fb_send: "Send Feedback",
+    fb_thanks: "Thank you for your feedback!",
+    fb_feature: "Request a feature",
+    fb_bug: "Report a bug",
   },
   ja: {
     hero_title: "Claude Code\n全部見える。\n終わったら鳴る。",
@@ -349,6 +423,13 @@ const T = {
     cta_title: "今すぐ使う",
     cta_sub: "Homebrew か GitHub Releases からダウンロード。30秒でセットアップ完了。",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
+    fb_title: "SessionDockの感想を教えてください",
+    fb_sub: "フィードバックは改善に役立ちます",
+    fb_placeholder: "詳しく教えてください（任意）...",
+    fb_send: "送信",
+    fb_thanks: "フィードバックありがとうございます！",
+    fb_feature: "機能リクエスト",
+    fb_bug: "バグ報告",
   },
   zh: {
     hero_title: "Claude Code\n全部可见。\n完成即响。",
@@ -382,6 +463,13 @@ const T = {
     cta_title: "立即开始使用",
     cta_sub: "通过 Homebrew 或 GitHub Releases 下载。30秒完成安装。",
     cta_btn: "下载 .dmg (3.6MB · Apple Silicon)",
+    fb_title: "SessionDock 用得怎么样？",
+    fb_sub: "您的反馈帮助我们改进",
+    fb_placeholder: "告诉我们更多（可选）...",
+    fb_send: "发送反馈",
+    fb_thanks: "感谢您的反馈！",
+    fb_feature: "功能建议",
+    fb_bug: "报告Bug",
   },
   ko: {
     hero_title: "Claude Code\n전부 보인다.\n끝나면 알려준다.",
@@ -415,6 +503,13 @@ const T = {
     cta_title: "지금 바로 사용하기",
     cta_sub: "Homebrew 또는 GitHub Releases에서 다운로드. 30초면 설치 완료.",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
+    fb_title: "SessionDock 어떠세요?",
+    fb_sub: "피드백은 개선에 도움이 됩니다",
+    fb_placeholder: "자세히 알려주세요 (선택)...",
+    fb_send: "피드백 보내기",
+    fb_thanks: "피드백 감사합니다!",
+    fb_feature: "기능 요청",
+    fb_bug: "버그 신고",
   }
 };
 
@@ -435,10 +530,58 @@ function setLang(lang) {
       else { el.innerHTML = t[key].replace(/\n/g, '<br>'); }
     }
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) { el.placeholder = t[key]; }
+  });
   document.documentElement.lang = lang;
 }
 
 setLang(currentLang);
+
+// --- Download & Event Tracking ---
+function trackEvent(action, label) {
+  gtag('event', action, { event_category: 'engagement', event_label: label });
+}
+function trackDownload(type, location) {
+  gtag('event', 'download', {
+    event_category: 'download',
+    event_label: type,
+    download_type: type,
+    download_location: location
+  });
+}
+function copyBrew(el) {
+  navigator.clipboard.writeText('brew install --cask adachic/tap/sessiondock');
+  trackEvent('copy_brew', el.closest('.hero, .cta') ? 'hero' : 'cta');
+  var orig = el.textContent;
+  el.textContent = 'Copied!';
+  setTimeout(function(){ el.textContent = orig; }, 1500);
+}
+
+// --- Feedback ---
+var selectedRating = null;
+function selectRating(rating) {
+  selectedRating = rating;
+  document.querySelectorAll('.feedback-btn').forEach(function(b) {
+    b.classList.toggle('selected', b.getAttribute('data-rating') === rating);
+  });
+  document.getElementById('feedbackText').style.display = 'block';
+  document.getElementById('feedbackSubmit').style.display = 'inline-block';
+  trackEvent('feedback_rating', rating);
+}
+function submitFeedback() {
+  var text = document.getElementById('feedbackText').value;
+  gtag('event', 'feedback_submit', {
+    event_category: 'feedback',
+    feedback_rating: selectedRating,
+    feedback_text: text.substring(0, 500)
+  });
+  document.getElementById('feedbackText').style.display = 'none';
+  document.getElementById('feedbackSubmit').style.display = 'none';
+  document.querySelector('.feedback-rating').style.display = 'none';
+  document.getElementById('feedbackThanks').style.display = 'block';
+}
 </script>
 </body>
 </html>
