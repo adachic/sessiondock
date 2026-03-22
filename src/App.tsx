@@ -92,6 +92,8 @@ function App() {
   const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortAsc, setSortAsc] = useState(true);
   const [manualOrder, setManualOrder] = useState<string[]>([]);
+  const [manualEditing, setManualEditing] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>(detectLang);
   const t = getMessages(lang);
 
@@ -135,9 +137,15 @@ function App() {
 
   function toggleSort(key: SortKey) {
     if (key === "manual") {
-      setSortKey("manual");
-      // 現在の表示順をmanualOrderとして固定
-      setManualOrder(sorted.map((s) => s.session_id));
+      if (sortKey !== "manual") {
+        // 他のソートからmanualへ: 編集モードON
+        setSortKey("manual");
+        setManualEditing(true);
+        setManualOrder(sorted.map((s) => s.session_id));
+      } else {
+        // 既にmanual: 編集モードのトグル
+        setManualEditing(!manualEditing);
+      }
       return;
     }
     if (sortKey === key) {
@@ -146,6 +154,38 @@ function App() {
       setSortKey(key);
       setSortAsc(true);
     }
+  }
+
+  const isEditing = sortKey === "manual" && manualEditing;
+
+  function handleDragStart(e: React.DragEvent, id: string) {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  }
+
+  function handleDragOver(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (!dragId || dragId === targetId) return;
+    setManualOrder((prev) => {
+      const arr = [...prev];
+      const from = arr.indexOf(dragId);
+      const to = arr.indexOf(targetId);
+      if (from === -1 || to === -1) return prev;
+      arr.splice(from, 1);
+      arr.splice(to, 0, dragId);
+      return arr;
+    });
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragId(null);
+  }
+
+  function handleDragEnd() {
+    setDragId(null);
   }
 
   function moveSession(id: string, direction: "up" | "down") {
@@ -189,7 +229,9 @@ function App() {
                 className={`sort-btn ${sortKey === k ? "active" : ""}`}
                 onClick={() => toggleSort(k)}
               >
-                {k === "manual" ? "✋" : k === "status" ? t.sortStatus : k === "cost" ? t.sortCost : t.sortTime}
+                {k === "manual"
+                  ? (sortKey === "manual" && manualEditing ? "✋✏" : sortKey === "manual" ? "✋🔒" : "✋")
+                  : k === "status" ? t.sortStatus : k === "cost" ? t.sortCost : t.sortTime}
                 {sortKey === k && k !== "manual" && (sortAsc ? "▲" : "▼")}
               </button>
             ))}
@@ -221,10 +263,15 @@ function App() {
               return (
                 <div
                   key={s.session_id}
-                  className={`session-compact ${s.status.toLowerCase()}`}
+                  className={`session-compact ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                  draggable={isEditing}
+                  onDragStart={(e) => handleDragStart(e, s.session_id)}
+                  onDragOver={(e) => handleDragOver(e, s.session_id)}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
                 >
                   <div className="compact-row">
-                    {sortKey === "manual" && (
+                    {isEditing && (
                       <span className="move-btns">
                         <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
                         <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
@@ -257,11 +304,16 @@ function App() {
             return (
               <div
                 key={s.session_id}
-                className={`session-card ${s.status.toLowerCase()}`}
+                className={`session-card ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                draggable={isEditing}
+                onDragStart={(e) => handleDragStart(e, s.session_id)}
+                onDragOver={(e) => handleDragOver(e, s.session_id)}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
               >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
-                    {sortKey === "manual" && (
+                    {isEditing && (
                       <span className="move-btns">
                         <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
                         <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>

@@ -115,6 +115,9 @@ body {
   line-height: 1;
 }
 .move-btn:hover { color: #60a5fa; }
+.session-compact.dragging, .session-card.dragging { opacity: 0.3; }
+.session-compact[draggable="true"], .session-card[draggable="true"] { cursor: grab; }
+.session-compact[draggable="true"]:active, .session-card[draggable="true"]:active { cursor: grabbing; }
 
 .compact-row {
   display: flex;
