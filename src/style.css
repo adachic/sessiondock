@@ -98,9 +98,23 @@ body {
 .session-compact.waiting { border-left: 3px solid #60a5fa; }
 .session-compact.done { border-left: 3px solid #6b7280; opacity: 0.6; }
 .session-compact.error { border-left: 3px solid #f87171; }
-.session-compact.dragging, .session-card.dragging { opacity: 0.4; }
-.session-compact[draggable="true"], .session-card[draggable="true"] { cursor: grab; }
-.session-compact[draggable="true"]:active, .session-card[draggable="true"]:active { cursor: grabbing; }
+.move-btns {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0;
+  margin-right: 4px;
+  line-height: 1;
+}
+.move-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 8px;
+  padding: 0 2px;
+  cursor: pointer;
+  line-height: 1;
+}
+.move-btn:hover { color: #60a5fa; }
 
 .compact-row {
   display: flex;

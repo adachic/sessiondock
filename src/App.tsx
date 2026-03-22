@@ -92,7 +92,6 @@ function App() {
   const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortAsc, setSortAsc] = useState(true);
   const [manualOrder, setManualOrder] = useState<string[]>([]);
-  const [dragId, setDragId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>(detectLang);
   const t = getMessages(lang);
 
@@ -149,26 +148,16 @@ function App() {
     }
   }
 
-  function handleDragStart(id: string) {
-    setDragId(id);
-  }
-
-  function handleDragOver(e: React.DragEvent, targetId: string) {
-    e.preventDefault();
-    if (!dragId || dragId === targetId) return;
+  function moveSession(id: string, direction: "up" | "down") {
     setManualOrder((prev) => {
       const arr = [...prev];
-      const from = arr.indexOf(dragId);
-      const to = arr.indexOf(targetId);
-      if (from === -1 || to === -1) return prev;
-      arr.splice(from, 1);
-      arr.splice(to, 0, dragId);
+      const idx = arr.indexOf(id);
+      if (idx === -1) return prev;
+      const target = direction === "up" ? idx - 1 : idx + 1;
+      if (target < 0 || target >= arr.length) return prev;
+      [arr[idx], arr[target]] = [arr[target], arr[idx]];
       return arr;
     });
-  }
-
-  function handleDragEnd() {
-    setDragId(null);
   }
 
   const active = sessions.filter((s) => s.status === "Running").length;
@@ -232,13 +221,15 @@ function App() {
               return (
                 <div
                   key={s.session_id}
-                  className={`session-compact ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
-                  draggable={sortKey === "manual"}
-                  onDragStart={() => handleDragStart(s.session_id)}
-                  onDragOver={(e) => handleDragOver(e, s.session_id)}
-                  onDragEnd={handleDragEnd}
+                  className={`session-compact ${s.status.toLowerCase()}`}
                 >
                   <div className="compact-row">
+                    {sortKey === "manual" && (
+                      <span className="move-btns">
+                        <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
+                        <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
+                      </span>
+                    )}
                     <span className={`compact-status ${s.status.toLowerCase()}`}>
                       {statusIcon(s.status)}
                     </span>
@@ -266,14 +257,16 @@ function App() {
             return (
               <div
                 key={s.session_id}
-                className={`session-card ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
-                draggable={sortKey === "manual"}
-                onDragStart={() => handleDragStart(s.session_id)}
-                onDragOver={(e) => handleDragOver(e, s.session_id)}
-                onDragEnd={handleDragEnd}
+                className={`session-card ${s.status.toLowerCase()}`}
               >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
+                    {sortKey === "manual" && (
+                      <span className="move-btns">
+                        <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
+                        <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
+                      </span>
+                    )}
                     {statusIcon(s.status)} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
                     {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
                   </span>
