@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SessionDock - Claude Code Multi-Session Monitor</title>
+  <meta name="description" content="Claude Codeの全セッションを一画面で監視。終わったら音で教えてくれる。無料・軽量・ローカル完結。">
+  <meta property="og:title" content="SessionDock - Claude Code Multi-Session Monitor">
+  <meta property="og:description" content="Claude Codeの全セッションを一画面で。終わったら音で通知。">
+  <meta property="og:type" content="website">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f0f1a;
+      --card: #16213e;
+      --border: #2a2a4a;
+      --text: #e0e0e0;
+      --muted: #8888aa;
+      --green: #4ade80;
+      --blue: #60a5fa;
+      --purple: #c4b5fd;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #e0e0e0, #a0a0c0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--green);
+      color: #0f0f1a;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary {
+      display: inline-block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--muted); }
+
+    .install-cmd {
+      display: inline-block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--green);
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      margin-top: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Screenshot mock */
+    .screenshot {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 0 auto 80px;
+      max-width: 440px;
+      font-family: "SF Mono", monospace;
+      font-size: 12px;
+    }
+    .screenshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .screenshot-header span:first-child { color: var(--muted); font-weight: 600; font-size: 13px; }
+    .screenshot-badges { display: flex; gap: 6px; }
+    .screenshot-badges span {
+      background: #1a1a2e;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+
+    .mock-session {
+      background: #1a1a2e;
+      border-left: 3px solid var(--green);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+    .mock-session.waiting { border-left-color: var(--blue); }
+    .mock-session.done { border-left-color: #6b7280; opacity: 0.6; }
+
+    .mock-row { display: flex; justify-content: space-between; font-size: 11px; }
+    .mock-status { font-weight: 600; }
+    .mock-status.running { color: var(--green); }
+    .mock-status.waiting { color: var(--blue); }
+    .mock-status.done { color: #6b7280; }
+    .mock-topic { color: var(--purple); font-size: 10px; margin-top: 3px; }
+    .mock-meta { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+    /* Pain points */
+    .section { padding: 60px 0; }
+    .section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .pain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .pain-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .pain-card .emoji { font-size: 24px; margin-bottom: 8px; }
+    .pain-card h3 { font-size: 15px; margin-bottom: 6px; }
+    .pain-card p { font-size: 13px; color: var(--muted); }
+
+    /* Features */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .feature-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+      width: 40px;
+      text-align: center;
+    }
+    .feature h3 { font-size: 15px; margin-bottom: 4px; }
+    .feature p { font-size: 13px; color: var(--muted); }
+
+    /* Specs */
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      text-align: center;
+    }
+    .spec {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .spec-value { font-size: 28px; font-weight: 700; color: var(--green); }
+    .spec-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 80px 0;
+    }
+    .cta h2 { font-size: 32px; margin-bottom: 12px; }
+    .cta p { color: var(--muted); margin-bottom: 24px; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 28px; }
+      .pain-grid { grid-template-columns: 1fr; }
+      .specs { grid-template-columns: 1fr 1fr; }
+      .hero-cta { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">Open Source / Free / macOS</div>
+    <h1>Claude Code<br>全部見える。<br>終わったら鳴る。</h1>
+    <p>複数ターミナルで走るClaude Codeのセッションを一画面で監視。処理が終わったら通知音でお知らせ。</p>
+    <div class="hero-cta">
+      <a href="https://github.com/adachic/sessiondock/releases" class="btn-primary">Download .dmg</a>
+      <a href="https://github.com/adachic/sessiondock" class="btn-secondary">GitHub</a>
+    </div>
+    <div class="install-cmd">brew install --cask adachic/tap/sessiondock</div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="screenshot">
+    <div class="screenshot-header">
+      <span>SessionDock</span>
+      <div class="screenshot-badges">
+        <span style="color:#4ade80">&#9654; 2</span>
+        <span style="color:#60a5fa">&#9208; 1</span>
+        <span style="color:#9ca3af">&#10003; 1</span>
+      </div>
+    </div>
+    <div class="mock-session">
+      <div class="mock-row">
+        <span class="mock-status running">&#9654; newapp</span>
+        <span style="color:#8888aa">&#23455;&#34892;&#20013; 3m</span>
+      </div>
+      <div class="mock-topic">SessionDockのLPを作成中...</div>
+      <div class="mock-meta">Opus &middot; &#8595;245K &#8593;12K &middot; API&#36027;&#29992; $1.23 &middot; &#27531;82%</div>
+    </div>
+    <div class="mock-session">
+      <div class="mock-row">
+        <span class="mock-status running">&#9654; api-server</span>
+        <span style="color:#8888aa">&#23455;&#34892;&#20013; 8m</span>
+      </div>
+      <div class="mock-topic">&#12486;&#12473;&#12488;&#20840;&#20214;&#12497;&#12473; (24/24)</div>
+      <div class="mock-meta">Sonnet &middot; &#8595;89K &#8593;8K &middot; API&#36027;&#29992; $0.72 &middot; &#27531;91%</div>
+    </div>
+    <div class="mock-session waiting">
+      <div class="mock-row">
+        <span class="mock-status waiting">&#9208; churnguard</span>
+        <span style="color:#8888aa">&#20837;&#21147;&#24453;&#12385; 12m</span>
+      </div>
+      <div class="mock-topic">&#20225;&#30011;&#26360;18&#26412;&#12398;&#20316;&#25104;&#23436;&#20102;</div>
+      <div class="mock-meta">Opus &middot; &#8595;520K &#8593;45K &middot; API&#36027;&#29992; $3.73 &middot; &#27531;48%</div>
+    </div>
+    <div class="mock-session done">
+      <div class="mock-row">
+        <span class="mock-status done">&#10003; contextpilot</span>
+        <span style="color:#8888aa">&#23436;&#20102;</span>
+      </div>
+      <div class="mock-topic">CLI&#12473;&#12461;&#12515;&#12490;&#12540;&#23455;&#35013;</div>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <h2>Claude Code、こんなことで困ってない？</h2>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="emoji">&#128064;</div>
+        <h3>どれが動いてるか分からない</h3>
+        <p>タブのタイトルが全部「claude」。1つずつ切り替えて確認するしかない。</p>
+      </div>
+      <div class="pain-card">
+        <div class="emoji">&#9200;</div>
+        <h3>終わったのに気づかない</h3>
+        <p>処理が終わったのに放置して30分ムダにした経験、ありませんか。</p>
+      </div>
+      <div class="pain-card">
+        <div class="emoji">&#128566;</div>
+        <h3>何を頼んだか忘れる</h3>
+        <p>3つ以上並行すると「あのタブ何やってたっけ」が頻発。</p>
+      </div>
+      <div class="pain-card">
+        <div class="emoji">&#128176;</div>
+        <h3>コストが見えない</h3>
+        <p>5セッション並行で合計いくらトークン使ったか分からない。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>SessionDock がすべて解決</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#128202;</div>
+        <div>
+          <h3>全セッション一覧表示</h3>
+          <p>実行中・入力待ち・完了がリアルタイムで一目で分かる。プロジェクト名、テーマ、現在のタスクも表示。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128276;</div>
+        <div>
+          <h3>入力待ちになったら3秒後に通知音</h3>
+          <p>処理が完了してユーザー入力待ちになると、macOS通知 + 音でお知らせ。もう見逃さない。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128178;</div>
+        <div>
+          <h3>API費用 & コンテキスト残量</h3>
+          <p>各セッションのトークン消費量・推定API費用・コンテキストウィンドウの残り%を常時表示。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128274;</div>
+        <div>
+          <h3>完全ローカル。データ送信なし</h3>
+          <p>~/.claude/ のファイルを読むだけ。外部通信ゼロ。APIキーも不要。プライバシー完全保護。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>スペック</h2>
+    <div class="specs">
+      <div class="spec">
+        <div class="spec-value">3.6MB</div>
+        <div class="spec-label">アプリサイズ</div>
+      </div>
+      <div class="spec">
+        <div class="spec-value">$0</div>
+        <div class="spec-label">完全無料</div>
+      </div>
+      <div class="spec">
+        <div class="spec-value">0</div>
+        <div class="spec-label">外部通信</div>
+      </div>
+      <div class="spec">
+        <div class="spec-value">Tauri</div>
+        <div class="spec-label">Rust + React</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <h2>今すぐ使う</h2>
+    <p>Homebrew か GitHub Releases からダウンロード。30秒でセットアップ完了。</p>
+    <div class="install-cmd" style="margin-bottom:20px">brew install --cask adachic/tap/sessiondock</div>
+    <br>
+    <a href="https://github.com/adachic/sessiondock/releases" class="btn-primary">Download .dmg (3.6MB)</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    SessionDock is open source. MIT License.<br>
+    <a href="https://github.com/adachic/sessiondock" style="color:#60a5fa;text-decoration:none">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
