@@ -116,18 +116,9 @@ fn check_status_changes(
             continue;
         }
 
-        if elapsed >= 3 && !entry.sent_3s {
-            entry.sent_3s = true;
-            play_sound_soft();
-        }
-
         if elapsed >= 10 && !entry.sent_10s {
             entry.sent_10s = true;
-            play_sound_strong();
-            if let Some(s) = current.iter().find(|s| s.session_id == id) {
-                let body = format!("{} is waiting for input", s.project_name);
-                send_notification(app, &body);
-            }
+            play_sound_soft();
         }
     }
 }
