@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://adachic.github.io/sessiondock/sitemap.xml
