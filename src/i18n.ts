@@ -25,6 +25,10 @@ const messages = {
     remaining: "remaining",
     cumulative: "Cumulative",
     sessions: "sessions",
+    sortStatus: "Status",
+    sortCost: "Cost",
+    sortTime: "Time",
+    bg: "bg",
   },
   ja: {
     running: "実行中",
@@ -43,6 +47,10 @@ const messages = {
     remaining: "残り",
     cumulative: "累計",
     sessions: "sessions",
+    sortStatus: "状態順",
+    sortCost: "費用順",
+    sortTime: "時間順",
+    bg: "bg",
   },
   zh: {
     running: "运行中",
@@ -61,6 +69,10 @@ const messages = {
     remaining: "剩余",
     cumulative: "累计",
     sessions: "sessions",
+    sortStatus: "状态",
+    sortCost: "费用",
+    sortTime: "时间",
+    bg: "bg",
   },
   ko: {
     running: "실행 중",
@@ -79,6 +91,10 @@ const messages = {
     remaining: "잔여",
     cumulative: "누적",
     sessions: "sessions",
+    sortStatus: "상태",
+    sortCost: "비용",
+    sortTime: "시간",
+    bg: "bg",
   },
 } as const;
 
@@ -99,6 +115,10 @@ export type Messages = {
   remaining: string;
   cumulative: string;
   sessions: string;
+  sortStatus: string;
+  sortCost: string;
+  sortTime: string;
+  bg: string;
 };
 
 export function getMessages(lang: Lang): Messages {

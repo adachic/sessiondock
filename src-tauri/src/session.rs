@@ -31,6 +31,7 @@ pub struct Session {
     pub estimated_cost: f64,
     pub elapsed_seconds: u64,
     pub status_since_seconds: u64,
+    pub bg_processes: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -167,6 +168,9 @@ impl SessionManager {
         let status_since_seconds = now_ms.saturating_sub(status_changed_at) / 1000;
         let estimated_cost = estimate_cost(&model, tokens_in, tokens_out);
 
+        // Count child processes (background shells like dev servers)
+        let bg_processes = self.count_child_processes(sf.pid);
+
         Some(Session {
             session_id: sf.session_id,
             pid: sf.pid,
@@ -184,7 +188,26 @@ impl SessionManager {
             estimated_cost,
             elapsed_seconds,
             status_since_seconds,
+            bg_processes,
         })
+    }
+
+    fn count_child_processes(&self, parent_pid: u32) -> u32 {
+        let parent = sysinfo::Pid::from_u32(parent_pid);
+        let mut count = 0u32;
+        for (_, process) in self.system.processes() {
+            if let Some(ppid) = process.parent() {
+                if ppid == parent {
+                    let name = process.name().to_string_lossy().to_lowercase();
+                    // caffeinate is internal to Claude Code, skip it
+                    if name.contains("caffeinate") {
+                        continue;
+                    }
+                    count += 1;
+                }
+            }
+        }
+        count
     }
 
     fn update_log_state(&mut self, session_id: &str, cwd: &str, now_ms: u64) {

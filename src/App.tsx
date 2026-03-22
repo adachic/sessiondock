@@ -20,7 +20,10 @@ interface Session {
   estimated_cost: number;
   elapsed_seconds: number;
   status_since_seconds: number;
+  bg_processes: number;
 }
+
+type SortKey = "status" | "cost" | "time";
 
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -86,6 +89,7 @@ function statusText(status: string, t: Messages): string {
 function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [compact, setCompact] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("status");
   const [lang, setLang] = useState<Lang>(detectLang);
   const t = getMessages(lang);
 
@@ -101,6 +105,14 @@ function App() {
     });
     return () => { unlisten.then((fn) => fn()); };
   }, []);
+
+  const statusOrder: Record<string, number> = { Running: 0, Waiting: 1, Done: 2, Error: 3 };
+  const sorted = [...sessions].sort((a, b) => {
+    if (sortKey === "status") return (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+    if (sortKey === "cost") return b.estimated_cost - a.estimated_cost;
+    if (sortKey === "time") return b.elapsed_seconds - a.elapsed_seconds;
+    return 0;
+  });
 
   const active = sessions.filter((s) => s.status === "Running").length;
   const waiting = sessions.filter((s) => s.status === "Waiting").length;
@@ -124,6 +136,17 @@ function App() {
       <div className="header">
         <h1>SessionDock</h1>
         <div className="header-right">
+          <div className="sort-btns">
+            {(["status", "cost", "time"] as SortKey[]).map((k) => (
+              <button
+                key={k}
+                className={`sort-btn ${sortKey === k ? "active" : ""}`}
+                onClick={() => setSortKey(k)}
+              >
+                {k === "status" ? t.sortStatus : k === "cost" ? t.sortCost : t.sortTime}
+              </button>
+            ))}
+          </div>
           <button className="view-toggle" onClick={() => setCompact(!compact)}>
             {compact ? t.detail : t.compact}
           </button>
@@ -142,7 +165,7 @@ function App() {
         </div>
       ) : (
         <div className="sessions">
-          {sessions.map((s) => {
+          {sorted.map((s) => {
             const usedPct = contextUsedPercent(s.model, s.last_context_used);
             const remainPct = 100 - usedPct;
             const ctxLimit = getContextLimit(s.model);
@@ -155,7 +178,10 @@ function App() {
                       {statusIcon(s.status)}
                     </span>
                     <span className="compact-project">{s.project_name}</span>
-                    <span className="compact-since">{statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}</span>
+                    <span className="compact-since">
+                      {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
+                      {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
+                    </span>
                     <span className="compact-ctx">{remainPct}%</span>
                     <span className="compact-cost">${s.estimated_cost.toFixed(2)}</span>
                   </div>
@@ -177,6 +203,7 @@ function App() {
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
                     {statusIcon(s.status)} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
+                    {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
                   </span>
                   <span className="session-time">
                     {t.total} {formatElapsed(s.elapsed_seconds)}

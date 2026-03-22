@@ -45,6 +45,25 @@ body {
 .header h1 { font-size: 13px; font-weight: 600; color: #a0a0c0; }
 .header-right { display: flex; align-items: center; gap: 8px; }
 
+.sort-btns { display: flex; gap: 2px; }
+.sort-btn {
+  background: none; border: 1px solid transparent; color: #6b7280;
+  font-size: 10px; padding: 1px 6px; border-radius: 4px; cursor: pointer;
+}
+.sort-btn:hover { color: #e0e0e0; }
+.sort-btn.active { color: #60a5fa; border-color: #60a5fa; background: rgba(96,165,250,0.08); }
+
+.bg-badge {
+  display: inline-block;
+  background: #3b2f00;
+  color: #facc15;
+  font-size: 9px;
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 600;
+}
+
 .view-toggle {
   background: #2a2a4a;
   border: 1px solid #3a3a5a;
