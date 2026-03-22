@@ -131,7 +131,7 @@ function App() {
     let cmp = 0;
     if (sortKey === "status") cmp = (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
     else if (sortKey === "cost") cmp = b.estimated_cost - a.estimated_cost;
-    else if (sortKey === "time") cmp = b.elapsed_seconds - a.elapsed_seconds;
+    else if (sortKey === "time") cmp = b.status_since_seconds - a.status_since_seconds;
     return sortAsc ? cmp : -cmp;
   });
 
@@ -186,6 +186,12 @@ function App() {
 
   function handleDragEnd() {
     setDragId(null);
+  }
+
+  function handleDoubleClick(pid: number) {
+    invoke("focus_terminal", { pid }).catch((err) => {
+      console.error("Failed to focus terminal:", err);
+    });
   }
 
   function moveSession(id: string, direction: "up" | "down") {
@@ -269,6 +275,7 @@ function App() {
                   onDragOver={(e) => handleDragOver(e, s.session_id)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
+                  onDoubleClick={() => handleDoubleClick(s.pid)}
                 >
                   <div className="compact-row">
                     {isEditing && (
@@ -280,10 +287,10 @@ function App() {
                     <span className={`compact-status ${s.status.toLowerCase()}`}>
                       {statusIcon(s.status)}
                     </span>
+                    {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
                     <span className="compact-project">{s.project_name}</span>
                     <span className="compact-since">
                       {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
-                      {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
                     </span>
                     <span className="compact-ctx">{remainPct}%</span>
                     <span className="compact-cost">${s.estimated_cost.toFixed(2)}</span>
@@ -310,6 +317,7 @@ function App() {
                 onDragOver={(e) => handleDragOver(e, s.session_id)}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
+                onDoubleClick={() => handleDoubleClick(s.pid)}
               >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
@@ -319,8 +327,7 @@ function App() {
                         <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
                       </span>
                     )}
-                    {statusIcon(s.status)} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
-                    {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
+                    {statusIcon(s.status)} {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
                   </span>
                   <span className="session-time">
                     {t.total} {formatElapsed(s.elapsed_seconds)}

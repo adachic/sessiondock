@@ -1,4 +1,5 @@
 mod session;
+mod terminal;
 
 use session::{Session, SessionManager, SessionStatus};
 use std::collections::HashMap;
@@ -25,6 +26,11 @@ struct AppState {
 fn get_sessions(state: tauri::State<AppState>) -> Vec<Session> {
     let mut manager = state.session_manager.lock().unwrap();
     manager.get_sessions()
+}
+
+#[tauri::command]
+fn focus_terminal(pid: u32) -> Result<String, String> {
+    terminal::activate_terminal_for_pid(pid)
 }
 
 fn update_tray_title(app: &AppHandle, sessions: &[Session]) {
@@ -165,7 +171,7 @@ pub fn run() {
             previous_sessions: Mutex::new(Vec::new()),
             pending_notify: Mutex::new(HashMap::new()),
         })
-        .invoke_handler(tauri::generate_handler![get_sessions])
+        .invoke_handler(tauri::generate_handler![get_sessions, focus_terminal])
         .setup(|app| {
             let quit = MenuItemBuilder::with_id("quit", "Quit SessionDock").build(app)?;
             let show = MenuItemBuilder::with_id("show", "Show Dashboard").build(app)?;
