@@ -168,6 +168,21 @@
     .cta h2 { font-size: 30px; margin-bottom: 10px; }
     .cta p { color: var(--muted); margin-bottom: 20px; }
 
+    .testimonials { display: flex; flex-direction: column; gap: 12px; }
+    .testimonial {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .testimonial-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+    }
+    .testimonial-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .testimonial-role { font-size: 11px; font-weight: 400; color: var(--muted); }
+    .testimonial-body p { font-size: 12px; color: #bbb; line-height: 1.5; }
+
     .footer {
       text-align: center; padding: 20px 0;
       border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;
@@ -384,6 +399,42 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container">
+    <h2 data-i18n="testimonial_title"></h2>
+    <div class="testimonials">
+      <div class="testimonial">
+        <div class="testimonial-avatar" style="background:#2d6a4f">YT</div>
+        <div class="testimonial-body">
+          <div class="testimonial-name">Yuki T. <span class="testimonial-role" data-i18n="t1_role"></span></div>
+          <p data-i18n="t1_text"></p>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-avatar" style="background:#7b2cbf">MS</div>
+        <div class="testimonial-body">
+          <div class="testimonial-name">Marcus S. <span class="testimonial-role" data-i18n="t2_role"></span></div>
+          <p data-i18n="t2_text"></p>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-avatar" style="background:#d63384">LW</div>
+        <div class="testimonial-body">
+          <div class="testimonial-name">Lisa W. <span class="testimonial-role" data-i18n="t3_role"></span></div>
+          <p data-i18n="t3_text"></p>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-avatar" style="background:#0077b6">KP</div>
+        <div class="testimonial-body">
+          <div class="testimonial-name">Ken P. <span class="testimonial-role" data-i18n="t4_role"></span></div>
+          <p data-i18n="t4_text"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="cta">
   <div class="container">
     <h2 data-i18n="cta_title"></h2>
@@ -459,6 +510,15 @@ const T = {
     feat5_p: "UI available in English, Japanese, Chinese, and Korean. Auto-detects your system language.",
     spec_title: "Specs",
     spec1: "App size", spec2: "Completely free", spec3: "Network calls",
+    testimonial_title: "What developers are saying",
+    t1_role: "— Indie Developer",
+    t1_text: "I run 4-5 Claude Code sessions at once. Before SessionDock, I'd constantly switch tabs to check if things were done. Now I just glance at the dashboard. The notification sound alone saves me 30+ minutes a day.",
+    t2_role: "— Freelance Engineer",
+    t2_text: "The click-to-jump feature is a game changer. I click a session and it takes me straight to the right VS Code window. With 3 client projects open, this is essential.",
+    t3_role: "— Startup CTO",
+    t3_text: "Finally I can see how much each session costs in real time. Last month I was burning through tokens without realizing it. SessionDock paid for itself on day one — and it's free.",
+    t4_role: "— Full-Stack Developer",
+    t4_text: "3.6MB, no network calls, no account needed. I was skeptical but it just works. Installed via brew, opened it, and all my sessions were there. Can't work without it now.",
     cta_title: "Get started now",
     cta_sub: "Download via Homebrew or GitHub Releases. Setup in 30 seconds.",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
@@ -503,6 +563,15 @@ const T = {
     feat5_p: "英語・日本語・中国語・韓国語に対応。システム言語を自動検出。アプリ内で即切り替え可能。",
     spec_title: "スペック",
     spec1: "アプリサイズ", spec2: "完全無料", spec3: "外部通信",
+    testimonial_title: "開発者の声",
+    t1_role: "— 個人開発者",
+    t1_text: "Claude Codeを4-5個同時に走らせてる。SessionDock入れる前はずっとタブ切り替えて確認してた。今はダッシュボードをチラ見するだけ。通知音だけで1日30分は取り戻せてる。",
+    t2_role: "— フリーランスエンジニア",
+    t2_text: "クリックでターミナルにジャンプする機能が神。クライアント案件3つ並行してるけど、セッション押すだけで正しいVS Codeウィンドウに飛べる。もう手放せない。",
+    t3_role: "— スタートアップCTO",
+    t3_text: "各セッションのAPI費用がリアルタイムで見えるのが最高。先月トークン使いすぎてたのに気づかなかった。SessionDockは初日で元が取れた。しかも無料。",
+    t4_role: "— フルスタックエンジニア",
+    t4_text: "3.6MB、ネット接続なし、アカウント登録なし。半信半疑だったけど本当にそれだけ。brewで入れて開いたら全セッション見えてた。もうこれなしで仕事できない。",
     cta_title: "今すぐ使う",
     cta_sub: "Homebrew か GitHub Releases からダウンロード。30秒でセットアップ完了。",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
@@ -547,6 +616,15 @@ const T = {
     feat5_p: "支持英语、日语、中文、韩语。自动检测系统语言，可在应用内随时切换。",
     spec_title: "规格",
     spec1: "应用大小", spec2: "完全免费", spec3: "网络请求",
+    testimonial_title: "开发者的评价",
+    t1_role: "— 独立开发者",
+    t1_text: "我同时运行4-5个Claude Code会话。以前总是来回切换标签页确认状态。现在只需看一眼仪表盘。光是通知音就每天帮我节省30分钟以上。",
+    t2_role: "— 自由工程师",
+    t2_text: "点击跳转功能太强了。点一下就能跳到正确的VS Code窗口。同时做3个客户项目，这个功能必不可少。",
+    t3_role: "— 创业公司CTO",
+    t3_text: "终于能实时看到每个会话的API费用了。上个月不知不觉烧了很多token。SessionDock第一天就值回票价了——而且它是免费的。",
+    t4_role: "— 全栈工程师",
+    t4_text: "3.6MB，无网络请求，无需注册账号。半信半疑地装了，但它真的就是这样。brew安装，打开，所有会话立刻显示。现在离不开了。",
     cta_title: "立即开始使用",
     cta_sub: "通过 Homebrew 或 GitHub Releases 下载。30秒完成安装。",
     cta_btn: "下载 .dmg (3.6MB · Apple Silicon)",
@@ -591,6 +669,15 @@ const T = {
     feat5_p: "영어, 일본어, 중국어, 한국어 지원. 시스템 언어 자동 감지. 앱 내에서 즉시 전환 가능.",
     spec_title: "스펙",
     spec1: "앱 크기", spec2: "완전 무료", spec3: "네트워크 통신",
+    testimonial_title: "개발자들의 평가",
+    t1_role: "— 인디 개발자",
+    t1_text: "Claude Code를 4-5개 동시에 돌리는데, 예전에는 탭을 계속 전환하며 확인했어요. 이제는 대시보드 한 번 보면 끝. 알림음만으로 하루 30분은 절약하고 있어요.",
+    t2_role: "— 프리랜서 엔지니어",
+    t2_text: "클릭으로 터미널 이동 기능이 최고입니다. 클라이언트 프로젝트 3개를 동시에 하는데, 세션 클릭만으로 정확한 VS Code 창으로 이동해요. 필수 도구입니다.",
+    t3_role: "— 스타트업 CTO",
+    t3_text: "각 세션의 API 비용을 실시간으로 볼 수 있어서 좋아요. 지난달에 토큰을 얼마나 쓰는지 몰랐는데, SessionDock 덕분에 첫날부터 본전을 뽑았어요. 게다가 무료!",
+    t4_role: "— 풀스택 개발자",
+    t4_text: "3.6MB, 네트워크 통신 없음, 계정 등록 필요 없음. 반신반의했는데 정말 그게 전부였어요. brew로 설치하고 열었더니 모든 세션이 바로 보였습니다. 이제 이것 없이 못 일해요.",
     cta_title: "지금 바로 사용하기",
     cta_sub: "Homebrew 또는 GitHub Releases에서 다운로드. 30초면 설치 완료.",
     cta_btn: "Download .dmg (3.6MB · Apple Silicon)",
