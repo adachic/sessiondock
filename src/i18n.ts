@@ -25,6 +25,7 @@ const messages = {
     remaining: "remaining",
     cumulative: "Cumulative",
     sessions: "sessions",
+    sortManual: "Manual",
     sortStatus: "Status",
     sortCost: "Cost",
     sortTime: "Time",
@@ -47,6 +48,7 @@ const messages = {
     remaining: "残り",
     cumulative: "累計",
     sessions: "sessions",
+    sortManual: "手動",
     sortStatus: "状態順",
     sortCost: "費用順",
     sortTime: "時間順",
@@ -69,6 +71,7 @@ const messages = {
     remaining: "剩余",
     cumulative: "累计",
     sessions: "sessions",
+    sortManual: "手动",
     sortStatus: "状态",
     sortCost: "费用",
     sortTime: "时间",
@@ -91,6 +94,7 @@ const messages = {
     remaining: "잔여",
     cumulative: "누적",
     sessions: "sessions",
+    sortManual: "수동",
     sortStatus: "상태",
     sortCost: "비용",
     sortTime: "시간",
@@ -115,6 +119,7 @@ export type Messages = {
   remaining: string;
   cumulative: string;
   sessions: string;
+  sortManual: string;
   sortStatus: string;
   sortCost: string;
   sortTime: string;

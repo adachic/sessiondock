@@ -9,11 +9,16 @@ use tauri::{
     AppHandle, Emitter, Manager,
 };
 
+struct PendingNotify {
+    started_at: std::time::Instant,
+    sent_3s: bool,
+    sent_10s: bool,
+}
+
 struct AppState {
     session_manager: Mutex<SessionManager>,
     previous_sessions: Mutex<Vec<Session>>,
-    // Running→Waitingに変わった時刻を記録（3秒後に通知音を鳴らすため）
-    pending_notify: Mutex<HashMap<String, std::time::Instant>>,
+    pending_notify: Mutex<HashMap<String, PendingNotify>>,
 }
 
 #[tauri::command]
@@ -49,7 +54,7 @@ fn check_status_changes(
     app: &AppHandle,
     current: &[Session],
     previous: &[Session],
-    pending: &mut HashMap<String, std::time::Instant>,
+    pending: &mut HashMap<String, PendingNotify>,
 ) {
     let now = std::time::Instant::now();
 
@@ -60,9 +65,16 @@ fn check_status_changes(
             .map(|s| &s.status);
 
         match (&curr.status, prev_status) {
-            // Running → Waiting: 3秒タイマー開始
+            // Running → Waiting: タイマー開始
             (SessionStatus::Waiting, Some(SessionStatus::Running)) => {
-                pending.insert(curr.session_id.clone(), now);
+                pending.insert(
+                    curr.session_id.clone(),
+                    PendingNotify {
+                        started_at: now,
+                        sent_3s: false,
+                        sent_10s: false,
+                    },
+                );
             }
             // Waiting → Running: タイマーキャンセル
             (SessionStatus::Running, Some(SessionStatus::Waiting)) => {
@@ -73,31 +85,48 @@ fn check_status_changes(
             | (SessionStatus::Done, Some(SessionStatus::Waiting)) => {
                 pending.remove(&curr.session_id);
                 let body = format!(
-                    "{} 完了 ({}分, API費用${:.2})",
+                    "{} completed ({}min, ${:.2})",
                     curr.project_name,
                     curr.elapsed_seconds / 60,
                     curr.estimated_cost
                 );
                 send_notification(app, &body);
-                play_sound();
+                play_sound_soft();
             }
             _ => {}
         }
     }
 
-    // 3秒経過したpendingを通知
-    let expired: Vec<String> = pending
-        .iter()
-        .filter(|(_, t)| now.duration_since(**t).as_secs() >= 3)
-        .map(|(id, _)| id.clone())
-        .collect();
+    // 3秒後: 軽い通知音（Glass）
+    // 10秒後: はっきりした通知音（Ping）+ macOS通知
+    let ids: Vec<String> = pending.keys().cloned().collect();
+    for id in ids {
+        let entry = pending.get_mut(&id).unwrap();
+        let elapsed = now.duration_since(entry.started_at).as_secs();
 
-    for id in expired {
-        pending.remove(&id);
-        if let Some(s) = current.iter().find(|s| s.session_id == id) {
-            // まだWaitingなら通知音を鳴らす
-            if matches!(s.status, SessionStatus::Waiting) {
-                play_sound();
+        // まだWaitingかどうか確認
+        let still_waiting = current
+            .iter()
+            .find(|s| s.session_id == id)
+            .map(|s| matches!(s.status, SessionStatus::Waiting))
+            .unwrap_or(false);
+
+        if !still_waiting {
+            pending.remove(&id);
+            continue;
+        }
+
+        if elapsed >= 3 && !entry.sent_3s {
+            entry.sent_3s = true;
+            play_sound_soft();
+        }
+
+        if elapsed >= 10 && !entry.sent_10s {
+            entry.sent_10s = true;
+            play_sound_strong();
+            if let Some(s) = current.iter().find(|s| s.session_id == id) {
+                let body = format!("{} is waiting for input", s.project_name);
+                send_notification(app, &body);
             }
         }
     }
@@ -113,10 +142,20 @@ fn send_notification(app: &AppHandle, body: &str) {
         .show();
 }
 
-fn play_sound() {
+// 3秒後: 軽い音 (Glass)
+fn play_sound_soft() {
     std::thread::spawn(|| {
         let _ = std::process::Command::new("afplay")
             .arg("/System/Library/Sounds/Glass.aiff")
+            .spawn();
+    });
+}
+
+// 10秒後: はっきりした音 (Ping)
+fn play_sound_strong() {
+    std::thread::spawn(|| {
+        let _ = std::process::Command::new("afplay")
+            .arg("/System/Library/Sounds/Ping.aiff")
             .spawn();
     });
 }

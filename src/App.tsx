@@ -23,7 +23,7 @@ interface Session {
   bg_processes: number;
 }
 
-type SortKey = "status" | "cost" | "time";
+type SortKey = "manual" | "status" | "cost" | "time";
 
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -90,6 +90,9 @@ function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [compact, setCompact] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("status");
+  const [sortAsc, setSortAsc] = useState(true);
+  const [manualOrder, setManualOrder] = useState<string[]>([]);
+  const [dragId, setDragId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>(detectLang);
   const t = getMessages(lang);
 
@@ -107,12 +110,66 @@ function App() {
   }, []);
 
   const statusOrder: Record<string, number> = { Running: 0, Waiting: 1, Done: 2, Error: 3 };
+
+  // manualモード: 新しいセッションが来たらmanualOrderに追加
+  useEffect(() => {
+    if (sortKey === "manual") {
+      setManualOrder((prev) => {
+        const ids = sessions.map((s) => s.session_id);
+        const newIds = ids.filter((id) => !prev.includes(id));
+        const valid = prev.filter((id) => ids.includes(id));
+        return [...valid, ...newIds];
+      });
+    }
+  }, [sessions, sortKey]);
+
   const sorted = [...sessions].sort((a, b) => {
-    if (sortKey === "status") return (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
-    if (sortKey === "cost") return b.estimated_cost - a.estimated_cost;
-    if (sortKey === "time") return b.elapsed_seconds - a.elapsed_seconds;
-    return 0;
+    if (sortKey === "manual") {
+      return manualOrder.indexOf(a.session_id) - manualOrder.indexOf(b.session_id);
+    }
+    let cmp = 0;
+    if (sortKey === "status") cmp = (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+    else if (sortKey === "cost") cmp = b.estimated_cost - a.estimated_cost;
+    else if (sortKey === "time") cmp = b.elapsed_seconds - a.elapsed_seconds;
+    return sortAsc ? cmp : -cmp;
   });
+
+  function toggleSort(key: SortKey) {
+    if (key === "manual") {
+      setSortKey("manual");
+      // 現在の表示順をmanualOrderとして固定
+      setManualOrder(sorted.map((s) => s.session_id));
+      return;
+    }
+    if (sortKey === key) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortKey(key);
+      setSortAsc(true);
+    }
+  }
+
+  function handleDragStart(id: string) {
+    setDragId(id);
+  }
+
+  function handleDragOver(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) return;
+    setManualOrder((prev) => {
+      const arr = [...prev];
+      const from = arr.indexOf(dragId);
+      const to = arr.indexOf(targetId);
+      if (from === -1 || to === -1) return prev;
+      arr.splice(from, 1);
+      arr.splice(to, 0, dragId);
+      return arr;
+    });
+  }
+
+  function handleDragEnd() {
+    setDragId(null);
+  }
 
   const active = sessions.filter((s) => s.status === "Running").length;
   const waiting = sessions.filter((s) => s.status === "Waiting").length;
@@ -137,13 +194,14 @@ function App() {
         <h1>SessionDock</h1>
         <div className="header-right">
           <div className="sort-btns">
-            {(["status", "cost", "time"] as SortKey[]).map((k) => (
+            {(["manual", "status", "cost", "time"] as SortKey[]).map((k) => (
               <button
                 key={k}
                 className={`sort-btn ${sortKey === k ? "active" : ""}`}
-                onClick={() => setSortKey(k)}
+                onClick={() => toggleSort(k)}
               >
-                {k === "status" ? t.sortStatus : k === "cost" ? t.sortCost : t.sortTime}
+                {k === "manual" ? "✋" : k === "status" ? t.sortStatus : k === "cost" ? t.sortCost : t.sortTime}
+                {sortKey === k && k !== "manual" && (sortAsc ? "▲" : "▼")}
               </button>
             ))}
           </div>
@@ -172,7 +230,14 @@ function App() {
 
             if (compact) {
               return (
-                <div key={s.session_id} className={`session-compact ${s.status.toLowerCase()}`}>
+                <div
+                  key={s.session_id}
+                  className={`session-compact ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                  draggable={sortKey === "manual"}
+                  onDragStart={() => handleDragStart(s.session_id)}
+                  onDragOver={(e) => handleDragOver(e, s.session_id)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="compact-row">
                     <span className={`compact-status ${s.status.toLowerCase()}`}>
                       {statusIcon(s.status)}
@@ -199,7 +264,14 @@ function App() {
             }
 
             return (
-              <div key={s.session_id} className={`session-card ${s.status.toLowerCase()}`}>
+              <div
+                key={s.session_id}
+                className={`session-card ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                draggable={sortKey === "manual"}
+                onDragStart={() => handleDragStart(s.session_id)}
+                onDragOver={(e) => handleDragOver(e, s.session_id)}
+                onDragEnd={handleDragEnd}
+              >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
                     {statusIcon(s.status)} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
