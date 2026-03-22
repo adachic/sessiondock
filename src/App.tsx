@@ -88,10 +88,20 @@ function statusText(status: string, t: Messages): string {
 
 function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [compact, setCompact] = useState(true);
-  const [sortKey, setSortKey] = useState<SortKey>("status");
-  const [sortAsc, setSortAsc] = useState(true);
-  const [manualOrder, setManualOrder] = useState<string[]>([]);
+  const [compact, setCompact] = useState(() => {
+    const saved = localStorage.getItem("sd-compact");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    return (localStorage.getItem("sd-sortKey") as SortKey) || "status";
+  });
+  const [sortAsc, setSortAsc] = useState(() => {
+    const saved = localStorage.getItem("sd-sortAsc");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [manualOrder, setManualOrder] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("sd-manualOrder") || "[]"); } catch { return []; }
+  });
   const [manualEditing, setManualEditing] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>(detectLang);
@@ -101,6 +111,12 @@ function App() {
     setLang(l);
     localStorage.setItem("sessiondock-lang", l);
   }
+
+  // 設定変更時にlocalStorageに保存
+  useEffect(() => { localStorage.setItem("sd-compact", String(compact)); }, [compact]);
+  useEffect(() => { localStorage.setItem("sd-sortKey", sortKey); }, [sortKey]);
+  useEffect(() => { localStorage.setItem("sd-sortAsc", String(sortAsc)); }, [sortAsc]);
+  useEffect(() => { localStorage.setItem("sd-manualOrder", JSON.stringify(manualOrder)); }, [manualOrder]);
 
   useEffect(() => {
     invoke<Session[]>("get_sessions").then(setSessions);
