@@ -1,7 +1,7 @@
 use std::process::Command;
 
 /// PIDからプロセスツリーを辿り、ターミナルアプリを特定してアクティブにする
-pub fn activate_terminal_for_pid(pid: u32) -> Result<String, String> {
+pub fn activate_terminal_for_pid(pid: u32, cwd: &str) -> Result<String, String> {
     // 1. TTYを取得
     let tty = get_tty(pid);
 
@@ -13,7 +13,7 @@ pub fn activate_terminal_for_pid(pid: u32) -> Result<String, String> {
         "Terminal" => activate_terminal_app(&tty),
         "iTerm2" => activate_iterm2(&tty),
         "ghostty" => activate_ghostty(&tty),
-        "Code" | "Visual Studio Code" | "Cursor" => activate_electron_app(&terminal),
+        "Code" | "Visual Studio Code" | "Cursor" => activate_electron_app(&terminal, cwd),
         _ => activate_generic(&terminal),
     }
 }
@@ -173,8 +173,27 @@ fn activate_ghostty(tty: &str) -> Result<String, String> {
     activate_generic("Ghostty")
 }
 
-/// VS Code / Cursor: アプリ全体をアクティブ化
-fn activate_electron_app(app_name: &str) -> Result<String, String> {
+/// VS Code / Cursor: cwd指定で特定ウィンドウをアクティブ化
+fn activate_electron_app(app_name: &str, cwd: &str) -> Result<String, String> {
+    // code / cursor CLIで対象フォルダのウィンドウをアクティブにする
+    let cli = match app_name {
+        "Code" | "Visual Studio Code" => "code",
+        "Cursor" => "cursor",
+        _ => "code",
+    };
+
+    // まず CLI でフォルダを --reuse-window で開く（既存ウィンドウをアクティブにする）
+    if !cwd.is_empty() {
+        let result = Command::new(cli)
+            .args(["-r", cwd])
+            .spawn();
+
+        if result.is_ok() {
+            return Ok(format!("Activated {} window for {}", cli, cwd));
+        }
+    }
+
+    // CLI が見つからなければアプリ全体をアクティブ化
     let actual_name = match app_name {
         "Code" => "Visual Studio Code",
         _ => app_name,

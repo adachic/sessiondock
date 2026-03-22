@@ -29,8 +29,8 @@ fn get_sessions(state: tauri::State<AppState>) -> Vec<Session> {
 }
 
 #[tauri::command]
-fn focus_terminal(pid: u32) -> Result<String, String> {
-    terminal::activate_terminal_for_pid(pid)
+fn focus_terminal(pid: u32, cwd: String) -> Result<String, String> {
+    terminal::activate_terminal_for_pid(pid, &cwd)
 }
 
 fn update_tray_title(app: &AppHandle, sessions: &[Session]) {

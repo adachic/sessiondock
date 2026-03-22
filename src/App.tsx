@@ -188,8 +188,8 @@ function App() {
     setDragId(null);
   }
 
-  function handleDoubleClick(pid: number) {
-    invoke("focus_terminal", { pid }).catch((err) => {
+  function handleDoubleClick(pid: number, cwd: string) {
+    invoke("focus_terminal", { pid, cwd }).catch((err) => {
       console.error("Failed to focus terminal:", err);
     });
   }
@@ -275,7 +275,7 @@ function App() {
                   onDragOver={(e) => handleDragOver(e, s.session_id)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  onDoubleClick={() => handleDoubleClick(s.pid)}
+                  onDoubleClick={() => handleDoubleClick(s.pid, s.cwd)}
                 >
                   <div className="compact-row">
                     {isEditing && (
@@ -317,7 +317,7 @@ function App() {
                 onDragOver={(e) => handleDragOver(e, s.session_id)}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
-                onDoubleClick={() => handleDoubleClick(s.pid)}
+                onDoubleClick={() => handleDoubleClick(s.pid, s.cwd)}
               >
                 <div className="session-top">
                   <span className={`session-status ${s.status.toLowerCase()}`}>
