@@ -30,6 +30,10 @@ const messages = {
     sortCost: "Cost",
     sortTime: "Time",
     bg: "bg",
+    hide: "Hide",
+    hidden: "Hidden",
+    restore: "Restore",
+    backToMain: "Back",
   },
   ja: {
     running: "実行中",
@@ -53,6 +57,10 @@ const messages = {
     sortCost: "費用順",
     sortTime: "時間順",
     bg: "bg",
+    hide: "非表示",
+    hidden: "非表示",
+    restore: "復帰",
+    backToMain: "戻る",
   },
   zh: {
     running: "运行中",
@@ -76,6 +84,10 @@ const messages = {
     sortCost: "费用",
     sortTime: "时间",
     bg: "bg",
+    hide: "隐藏",
+    hidden: "已隐藏",
+    restore: "恢复",
+    backToMain: "返回",
   },
   ko: {
     running: "실행 중",
@@ -99,6 +111,10 @@ const messages = {
     sortCost: "비용",
     sortTime: "시간",
     bg: "bg",
+    hide: "숨기기",
+    hidden: "숨김",
+    restore: "복원",
+    backToMain: "돌아가기",
   },
 } as const;
 
@@ -124,6 +140,10 @@ export type Messages = {
   sortCost: string;
   sortTime: string;
   bg: string;
+  hide: string;
+  hidden: string;
+  restore: string;
+  backToMain: string;
 };
 
 export function getMessages(lang: Lang): Messages {

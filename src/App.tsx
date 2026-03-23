@@ -104,7 +104,14 @@ function App() {
   });
   const [manualEditing, setManualEditing] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [hiddenIds, setHiddenIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("sd-hiddenIds") || "[]"); } catch { return []; }
+  });
+  const [showHidden, setShowHidden] = useState(false);
   const [lang, setLang] = useState<Lang>(detectLang);
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    return (localStorage.getItem("sd-theme") as "dark" | "light") || "dark";
+  });
   const t = getMessages(lang);
 
   function changeLang(l: Lang) {
@@ -112,11 +119,18 @@ function App() {
     localStorage.setItem("sessiondock-lang", l);
   }
 
+  // テーマ変更をDOMに反映
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("sd-theme", theme);
+  }, [theme]);
+
   // 設定変更時にlocalStorageに保存
   useEffect(() => { localStorage.setItem("sd-compact", String(compact)); }, [compact]);
   useEffect(() => { localStorage.setItem("sd-sortKey", sortKey); }, [sortKey]);
   useEffect(() => { localStorage.setItem("sd-sortAsc", String(sortAsc)); }, [sortAsc]);
   useEffect(() => { localStorage.setItem("sd-manualOrder", JSON.stringify(manualOrder)); }, [manualOrder]);
+  useEffect(() => { localStorage.setItem("sd-hiddenIds", JSON.stringify(hiddenIds)); }, [hiddenIds]);
 
   useEffect(() => {
     invoke<Session[]>("get_sessions").then(setSessions);
@@ -140,7 +154,10 @@ function App() {
     }
   }, [sessions, sortKey]);
 
-  const sorted = [...sessions].sort((a, b) => {
+  const visibleSessions = sessions.filter((s) => !hiddenIds.includes(s.session_id));
+  const hiddenSessions = sessions.filter((s) => hiddenIds.includes(s.session_id));
+
+  const sorted = [...visibleSessions].sort((a, b) => {
     if (sortKey === "manual") {
       return manualOrder.indexOf(a.session_id) - manualOrder.indexOf(b.session_id);
     }
@@ -222,10 +239,20 @@ function App() {
     });
   }
 
-  const active = sessions.filter((s) => s.status === "Running").length;
-  const waiting = sessions.filter((s) => s.status === "Waiting").length;
-  const done = sessions.filter((s) => s.status === "Done").length;
-  const totalCost = sessions.reduce((sum, s) => sum + s.estimated_cost, 0);
+  function hideSession(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setHiddenIds((prev) => prev.includes(id) ? prev : [...prev, id]);
+  }
+
+  function restoreSession(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setHiddenIds((prev) => prev.filter((x) => x !== id));
+  }
+
+  const active = visibleSessions.filter((s) => s.status === "Running").length;
+  const waiting = visibleSessions.filter((s) => s.status === "Waiting").length;
+  const done = visibleSessions.filter((s) => s.status === "Done").length;
+  const totalCost = visibleSessions.reduce((sum, s) => sum + s.estimated_cost, 0);
 
   return (
     <div className="app">
@@ -258,6 +285,9 @@ function App() {
               </button>
             ))}
           </div>
+          <button className="theme-toggle" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            {theme === "dark" ? "☀" : "🌙"}
+          </button>
           <button className="view-toggle" onClick={() => setCompact(!compact)}>
             {compact ? t.detail : t.compact}
           </button>
@@ -269,120 +299,170 @@ function App() {
         </div>
       </div>
 
-      {sessions.length === 0 ? (
-        <div className="empty-state">
-          <h2>{t.noSessions}</h2>
-          <p>{t.startClaude}</p>
-        </div>
-      ) : (
-        <div className="sessions">
-          {sorted.map((s) => {
-            const usedPct = contextUsedPercent(s.model, s.last_context_used);
-            const remainPct = 100 - usedPct;
-            const ctxLimit = getContextLimit(s.model);
-
-            if (compact) {
-              return (
-                <div
-                  key={s.session_id}
-                  className={`session-compact ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
-                  draggable={isEditing}
-                  onDragStart={(e) => handleDragStart(e, s.session_id)}
-                  onDragOver={(e) => handleDragOver(e, s.session_id)}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => handleDoubleClick(s.pid, s.cwd)}
-                >
+      {showHidden ? (
+        /* ===== 非表示セッション一覧画面 ===== */
+        <>
+          <div className="hidden-header">
+            <button className="back-btn" onClick={() => setShowHidden(false)}>
+              ← {t.backToMain}
+            </button>
+            <span className="hidden-title">{t.hidden} ({hiddenSessions.length})</span>
+          </div>
+          {hiddenSessions.length === 0 ? (
+            <div className="empty-state">
+              <h2>{t.hidden}</h2>
+              <p>-</p>
+            </div>
+          ) : (
+            <div className="sessions">
+              {hiddenSessions.map((s) => (
+                <div key={s.session_id} className={`session-compact ${s.status.toLowerCase()}`}>
                   <div className="compact-row">
-                    {isEditing && (
-                      <span className="move-btns">
-                        <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
-                        <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
-                      </span>
-                    )}
                     <span className={`compact-status ${s.status.toLowerCase()}`}>
                       {statusIcon(s.status)}
                     </span>
-                    {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
                     <span className="compact-project">{s.project_name}</span>
                     <span className="compact-since">
                       {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
                     </span>
-                    <span className="compact-ctx">{remainPct}%</span>
-                    <span className="compact-cost">${s.estimated_cost.toFixed(2)}</span>
+                    <button className="restore-btn" onClick={(e) => restoreSession(e, s.session_id)}>
+                      {t.restore}
+                    </button>
                   </div>
                   <div className="compact-topic">
                     {s.current_task || s.topic || s.last_message || "-"}
                   </div>
-                  <div className="context-bar compact-bar">
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        /* ===== メイン画面 ===== */
+        <>
+          {visibleSessions.length === 0 && hiddenSessions.length === 0 ? (
+            <div className="empty-state">
+              <h2>{t.noSessions}</h2>
+              <p>{t.startClaude}</p>
+            </div>
+          ) : (
+            <div className="sessions">
+              {sorted.map((s) => {
+                const usedPct = contextUsedPercent(s.model, s.last_context_used);
+                const remainPct = 100 - usedPct;
+                const ctxLimit = getContextLimit(s.model);
+
+                if (compact) {
+                  return (
                     <div
-                      className={`context-bar-fill ${contextBarClass(usedPct)}`}
-                      style={{ width: `${usedPct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            }
+                      key={s.session_id}
+                      className={`session-compact ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                      draggable={isEditing}
+                      onDragStart={(e) => handleDragStart(e, s.session_id)}
+                      onDragOver={(e) => handleDragOver(e, s.session_id)}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => handleDoubleClick(s.pid, s.cwd)}
+                    >
+                      <div className="compact-row">
+                        {isEditing && (
+                          <span className="move-btns">
+                            <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
+                            <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
+                          </span>
+                        )}
+                        <span className={`compact-status ${s.status.toLowerCase()}`}>
+                          {statusIcon(s.status)}
+                        </span>
+                        {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>}
+                        <span className="compact-project">{s.project_name}</span>
+                        <span className="compact-since">
+                          {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
+                        </span>
+                        <span className="compact-ctx">{remainPct}%</span>
+                        <span className="compact-cost">${s.estimated_cost.toFixed(2)}</span>
+                        <button className="hide-btn" onClick={(e) => hideSession(e, s.session_id)} title={t.hide}>×</button>
+                      </div>
+                      <div className="compact-topic">
+                        {s.current_task || s.topic || s.last_message || "-"}
+                      </div>
+                      <div className="context-bar compact-bar">
+                        <div
+                          className={`context-bar-fill ${contextBarClass(usedPct)}`}
+                          style={{ width: `${usedPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
 
-            return (
-              <div
-                key={s.session_id}
-                className={`session-card ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
-                draggable={isEditing}
-                onDragStart={(e) => handleDragStart(e, s.session_id)}
-                onDragOver={(e) => handleDragOver(e, s.session_id)}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-                onClick={() => handleDoubleClick(s.pid, s.cwd)}
-              >
-                <div className="session-top">
-                  <span className={`session-status ${s.status.toLowerCase()}`}>
-                    {isEditing && (
-                      <span className="move-btns">
-                        <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
-                        <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
-                      </span>
-                    )}
-                    {statusIcon(s.status)} {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
-                  </span>
-                  <span className="session-time">
-                    {t.total} {formatElapsed(s.elapsed_seconds)}
-                  </span>
-                </div>
-
-                <div className="session-project">{s.project_name}</div>
-
-                {s.topic && <div className="session-topic">{s.topic}</div>}
-                {s.current_task && <div className="session-task">{s.current_task}</div>}
-                {s.last_message && s.last_message !== s.topic && (
-                  <div className="session-message">{s.last_message}</div>
-                )}
-
-                <div className="session-meta">
-                  <span>{shortModel(s.model)}</span>
-                  <span>{t.cumulative} ↓{formatTokens(s.tokens_in)} ↑{formatTokens(s.tokens_out)}</span>
-                  <span>{t.apiCost} ${s.estimated_cost.toFixed(2)}</span>
-                </div>
-                <div className="session-context-detail">
-                  {t.context}: {formatTokens(s.last_context_used)} / {formatTokens(ctxLimit)} ({usedPct}% {t.used} / {t.remaining} {remainPct}%)
-                </div>
-                <div className="context-bar">
+                return (
                   <div
-                    className={`context-bar-fill ${contextBarClass(usedPct)}`}
-                    style={{ width: `${usedPct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    key={s.session_id}
+                    className={`session-card ${s.status.toLowerCase()} ${dragId === s.session_id ? "dragging" : ""}`}
+                    draggable={isEditing}
+                    onDragStart={(e) => handleDragStart(e, s.session_id)}
+                    onDragOver={(e) => handleDragOver(e, s.session_id)}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => handleDoubleClick(s.pid, s.cwd)}
+                  >
+                    <div className="session-top">
+                      <span className={`session-status ${s.status.toLowerCase()}`}>
+                        {isEditing && (
+                          <span className="move-btns">
+                            <button className="move-btn" onClick={() => moveSession(s.session_id, "up")}>&#9650;</button>
+                            <button className="move-btn" onClick={() => moveSession(s.session_id, "down")}>&#9660;</button>
+                          </span>
+                        )}
+                        {statusIcon(s.status)} {s.bg_processes > 0 && <span className="bg-badge">{s.bg_processes}{t.bg}</span>} {statusText(s.status, t)} {formatElapsed(s.status_since_seconds)}
+                      </span>
+                      <span className="session-time">
+                        <button className="hide-btn" onClick={(e) => hideSession(e, s.session_id)} title={t.hide}>×</button>
+                        {t.total} {formatElapsed(s.elapsed_seconds)}
+                      </span>
+                    </div>
 
-      {sessions.length > 0 && (
-        <div className="footer">
-          <span>{sessions.length} {t.sessions}</span>
-          <span>{t.apiCostTotal} ${totalCost.toFixed(2)}</span>
-        </div>
+                    <div className="session-project">{s.project_name}</div>
+
+                    {s.topic && <div className="session-topic">{s.topic}</div>}
+                    {s.current_task && <div className="session-task">{s.current_task}</div>}
+                    {s.last_message && s.last_message !== s.topic && (
+                      <div className="session-message">{s.last_message}</div>
+                    )}
+
+                    <div className="session-meta">
+                      <span>{shortModel(s.model)}</span>
+                      <span>{t.cumulative} ↓{formatTokens(s.tokens_in)} ↑{formatTokens(s.tokens_out)}</span>
+                      <span>{t.apiCost} ${s.estimated_cost.toFixed(2)}</span>
+                    </div>
+                    <div className="session-context-detail">
+                      {t.context}: {formatTokens(s.last_context_used)} / {formatTokens(ctxLimit)} ({usedPct}% {t.used} / {t.remaining} {remainPct}%)
+                    </div>
+                    <div className="context-bar">
+                      <div
+                        className={`context-bar-fill ${contextBarClass(usedPct)}`}
+                        style={{ width: `${usedPct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {sessions.length > 0 && (
+            <div className="footer">
+              <span>{visibleSessions.length} {t.sessions}</span>
+              {hiddenSessions.length > 0 && (
+                <button className="hidden-link" onClick={() => setShowHidden(true)}>
+                  {t.hidden} ({hiddenSessions.length})
+                </button>
+              )}
+              <span>{t.apiCostTotal} ${totalCost.toFixed(2)}</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

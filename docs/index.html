@@ -43,7 +43,7 @@
     "license": "https://opensource.org/licenses/MIT",
     "url": "https://adachic.github.io/sessiondock/",
     "downloadUrl": "https://github.com/adachic/sessiondock/releases",
-    "softwareVersion": "0.1.0",
+    "softwareVersion": "0.2.0",
     "fileSize": "3.6MB"
   }
   </script>
@@ -250,7 +250,7 @@
     <h1 data-i18n="hero_title"></h1>
     <p data-i18n="hero_sub"></p>
     <div class="hero-cta">
-      <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary" onclick="trackDownload('dmg','hero')">Download .dmg (Apple Silicon)</a>
+      <a href="https://github.com/adachic/sessiondock/releases/download/v0.2.0/SessionDock_0.2.0_aarch64.dmg" class="btn-primary" onclick="trackDownload('dmg','hero')">Download .dmg (Apple Silicon)</a>
       <a href="https://github.com/adachic/sessiondock" class="btn-secondary" onclick="trackEvent('click_github','hero')">GitHub</a>
     </div>
     <div class="install-cmd" onclick="copyBrew(this)" style="cursor:pointer" title="Click to copy">brew install --cask adachic/tap/sessiondock</div>
@@ -276,6 +276,7 @@
           <span style="color:#6b7280;font-size:9px;padding:0 4px">Time</span>
           <span style="color:#6b7280;font-size:9px;padding:0 4px">✋</span>
         </div>
+        <span style="font-size:10px;color:#a0a0c0;border:1px solid #3a3a5a;padding:1px 4px;border-radius:3px">☀</span>
         <span style="font-size:9px;color:#6b7280;border:1px solid #3a3a5a;padding:1px 5px;border-radius:3px">Detail</span>
         <div class="screenshot-badges">
           <span style="color:#4ade80">&#9654;2</span>
@@ -288,7 +289,7 @@
     <div class="mock-session">
       <div class="mock-row">
         <span class="ms-r">&#9654; newapp</span>
-        <span style="color:#8888aa" data-i18n="mock_running">Running 3m</span>
+        <span style="color:#8888aa"><span data-i18n="mock_running">Running 3m</span> <span style="color:#6b7280;font-size:10px;opacity:0.6">&times;</span></span>
       </div>
       <div class="mock-topic" data-i18n="mock_topic1">Building LP for SessionDock...</div>
       <div class="mock-meta">Op · ↓245K ↑12K · API cost $1.23 · 82%</div>
@@ -322,6 +323,7 @@
     <!-- Footer -->
     <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a;display:flex;justify-content:space-between;font-size:10px;color:#7777aa">
       <span>4 sessions</span>
+      <span style="text-decoration:underline;cursor:default" data-i18n="mock_hidden">Hidden (1)</span>
       <span>API cost total $6.68</span>
     </div>
   </div>
@@ -383,6 +385,14 @@
         <div class="feature-icon">&#127760;</div>
         <div><h3 data-i18n="feat5_h"></h3><p data-i18n="feat5_p"></p></div>
       </div>
+      <div class="feature">
+        <div class="feature-icon">&#127763;</div>
+        <div><h3 data-i18n="feat7_h"></h3><p data-i18n="feat7_p"></p></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128065;</div>
+        <div><h3 data-i18n="feat8_h"></h3><p data-i18n="feat8_p"></p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -441,7 +451,7 @@
     <p data-i18n="cta_sub"></p>
     <div class="install-cmd" style="margin-bottom:20px;cursor:pointer" onclick="copyBrew(this)" title="Click to copy">brew install --cask adachic/tap/sessiondock</div>
     <br>
-    <a href="https://github.com/adachic/sessiondock/releases/download/v0.1.0/SessionDock_0.1.0_aarch64.dmg" class="btn-primary" data-i18n="cta_btn" onclick="trackDownload('dmg','cta')"></a>
+    <a href="https://github.com/adachic/sessiondock/releases/download/v0.2.0/SessionDock_0.2.0_aarch64.dmg" class="btn-primary" data-i18n="cta_btn" onclick="trackDownload('dmg','cta')"></a>
   </div>
 </section>
 
@@ -508,6 +518,11 @@ const T = {
     feat6_p: "Click a session to activate its terminal window. Finds the exact VS Code window, Terminal.app tab, or iTerm2 session.",
     feat5_h: "Multi-language support",
     feat5_p: "UI available in English, Japanese, Chinese, and Korean. Auto-detects your system language.",
+    feat7_h: "Dark / Light mode",
+    feat7_p: "Switch between dark and light themes with one click. Your preference is saved and persists across restarts.",
+    feat8_h: "Hide & restore sessions",
+    feat8_p: "Hide sessions you don't need right now. View all hidden sessions on a separate screen and restore them anytime.",
+    mock_hidden: "Hidden (1)",
     spec_title: "Specs",
     spec1: "App size", spec2: "Completely free", spec3: "Network calls",
     testimonial_title: "What developers are saying",
@@ -561,6 +576,11 @@ const T = {
     feat6_p: "セッションをクリックすると、そのターミナルウィンドウがアクティブに。VS Codeは複数ウィンドウからプロジェクトを特定。Terminal.app/iTerm2はタブまで特定。",
     feat5_h: "多言語対応",
     feat5_p: "英語・日本語・中国語・韓国語に対応。システム言語を自動検出。アプリ内で即切り替え可能。",
+    feat7_h: "ダーク / ライトモード",
+    feat7_p: "ワンクリックでダーク・ライトテーマを切り替え。設定はアプリ再起動後も保持されます。",
+    feat8_h: "セッションの非表示 & 復帰",
+    feat8_p: "今は不要なセッションを非表示に。別画面で一覧表示し、いつでもワンタップで復帰できます。",
+    mock_hidden: "非表示 (1)",
     spec_title: "スペック",
     spec1: "アプリサイズ", spec2: "完全無料", spec3: "外部通信",
     testimonial_title: "開発者の声",
@@ -614,6 +634,11 @@ const T = {
     feat6_p: "点击会话即可激活其终端窗口。可精确定位 VS Code 窗口、Terminal.app 标签页或 iTerm2 会话。",
     feat5_h: "多语言支持",
     feat5_p: "支持英语、日语、中文、韩语。自动检测系统语言，可在应用内随时切换。",
+    feat7_h: "深色 / 浅色模式",
+    feat7_p: "一键切换深色和浅色主题。偏好设置会保存，重启后依然保持。",
+    feat8_h: "隐藏和恢复会话",
+    feat8_p: "隐藏暂时不需要的会话。在单独的页面查看所有已隐藏的会话，随时一键恢复。",
+    mock_hidden: "已隐藏 (1)",
     spec_title: "规格",
     spec1: "应用大小", spec2: "完全免费", spec3: "网络请求",
     testimonial_title: "开发者的评价",
@@ -667,6 +692,11 @@ const T = {
     feat6_p: "세션을 클릭하면 해당 터미널 창이 활성화. VS Code 창, Terminal.app 탭, iTerm2 세션을 정확히 찾아줍니다.",
     feat5_h: "다국어 지원",
     feat5_p: "영어, 일본어, 중국어, 한국어 지원. 시스템 언어 자동 감지. 앱 내에서 즉시 전환 가능.",
+    feat7_h: "다크 / 라이트 모드",
+    feat7_p: "원클릭으로 다크·라이트 테마 전환. 설정은 앱 재시작 후에도 유지됩니다.",
+    feat8_h: "세션 숨기기 & 복원",
+    feat8_p: "지금 필요 없는 세션을 숨기세요. 별도 화면에서 숨긴 세션을 확인하고 언제든 복원할 수 있습니다.",
+    mock_hidden: "숨김 (1)",
     spec_title: "스펙",
     spec1: "앱 크기", spec2: "완전 무료", spec3: "네트워크 통신",
     testimonial_title: "개발자들의 평가",
